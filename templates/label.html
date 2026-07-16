@@ -1,0 +1,43 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Label {{ image_id }}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+  <div id="nav">
+    <button id="prev-btn" {% if idx == 0 %}disabled{% endif %}>&larr; Prev</button>
+    <span>{{ image_id }} ({{ idx + 1 }} / {{ total }})</span>
+    <button id="next-btn" {% if idx + 1 == total %}disabled{% endif %}>Next &rarr;</button>
+  </div>
+
+  <div id="main">
+    <canvas id="canvas"></canvas>
+    <div id="surface-panel">
+      <ul id="surface-list"></ul>
+      <button id="add-surface-btn">+ Add Surface</button>
+      <p class="hint">
+        Click a surface's color button to activate it, click again to confirm.<br>
+        On canvas: click empty space to add a point, click a point to remove it,
+        drag a point to move it. Wheel to zoom, right-click-drag to pan.
+      </p>
+    </div>
+  </div>
+
+  <h3>Raw image</h3>
+  <img id="raw-img" src="{{ url_for('serve_image', image_id=image_id) }}">
+
+  <script>
+    window.LABEL_CONFIG = {
+      imageId: {{ image_id | tojson }},
+      width: {{ width }},
+      height: {{ height }},
+      idx: {{ idx }},
+      total: {{ total }},
+      palette: {{ palette | tojson }}
+    };
+  </script>
+  <script src="{{ url_for('static', filename='js/label.js') }}"></script>
+</body>
+</html>
