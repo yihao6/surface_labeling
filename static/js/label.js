@@ -6,8 +6,6 @@ const PALETTE = cfg.palette;
 
 const HIT_RADIUS_PX = 8;
 const DRAG_THRESHOLD_PX = 3;
-const MIN_SCALE = 0.05;
-const MAX_SCALE = 20;
 
 const canvas = document.getElementById("canvas");
 canvas.width = WIDTH;
@@ -21,7 +19,6 @@ img.src = `/image/${IMAGE_ID}`;
 let surfaces = [];
 let activeIndex = null;
 let previewCurves = null;
-const view = { scale: 1, offsetX: 0, offsetY: 0 };
 
 function hasEnoughPoints(s) {
   const xs = new Set(s.points.map((p) => p[0].toFixed(6)));
@@ -151,10 +148,7 @@ async function requestPreview() {
 }
 
 function draw() {
-  ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.setTransform(view.scale, 0, 0, view.scale, view.offsetX, view.offsetY);
-
   if (img.complete) ctx.drawImage(img, 0, 0);
 
   surfaces.forEach((s, i) => {
@@ -163,18 +157,17 @@ function draw() {
     if (curve) {
       ctx.beginPath();
       ctx.strokeStyle = color;
-      ctx.lineWidth = 2 / view.scale;
+      ctx.lineWidth = 2;
       curve.forEach((y, x) => (x === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y)));
       ctx.stroke();
     }
-    const r = 4 / view.scale;
     s.points.forEach(([x, y]) => {
       ctx.beginPath();
       ctx.fillStyle = color;
-      ctx.arc(x, y, r, 0, 2 * Math.PI);
+      ctx.arc(x, y, 4, 0, 2 * Math.PI);
       ctx.fill();
       if (i === activeIndex) {
-        ctx.lineWidth = 1 / view.scale;
+        ctx.lineWidth = 1;
         ctx.strokeStyle = "#000";
         ctx.stroke();
       }
@@ -184,77 +177,36 @@ function draw() {
 
 function toImage(clientX, clientY) {
   const rect = canvas.getBoundingClientRect();
-  const cx = (clientX - rect.left) * (canvas.width / rect.width);
-  const cy = (clientY - rect.top) * (canvas.height / rect.height);
-  return [(cx - view.offsetX) / view.scale, (cy - view.offsetY) / view.scale];
-}
-
-function toCanvas(clientX, clientY) {
-  const rect = canvas.getBoundingClientRect();
   return [
     (clientX - rect.left) * (canvas.width / rect.width),
     (clientY - rect.top) * (canvas.height / rect.height),
   ];
 }
 
-// --- zoom (wheel) ---
-canvas.addEventListener(
-  "wheel",
-  (e) => {
-    e.preventDefault();
-    const [cx, cy] = toCanvas(e.clientX, e.clientY);
-    const ix = (cx - view.offsetX) / view.scale;
-    const iy = (cy - view.offsetY) / view.scale;
-    const factor = e.deltaY < 0 ? 1.1 : 1 / 1.1;
-    const newScale = Math.min(Math.max(view.scale * factor, MIN_SCALE), MAX_SCALE);
-    view.offsetX = cx - ix * newScale;
-    view.offsetY = cy - iy * newScale;
-    view.scale = newScale;
-    draw();
-  },
-  { passive: false }
-);
-
-// --- pan (right-click-drag) ---
-canvas.addEventListener("contextmenu", (e) => e.preventDefault());
-
-let panState = null;
 let dragState = null;
 
 canvas.addEventListener("mousedown", (e) => {
-  if (e.button === 2) {
-    panState = { cx: e.clientX, cy: e.clientY, ox: view.offsetX, oy: view.offsetY };
-  } else if (e.button === 0) {
-    handleLeftDown(e);
-  }
+  if (e.button === 0) handleLeftDown(e);
 });
 
 window.addEventListener("mousemove", (e) => {
-  if (panState) {
-    view.offsetX = panState.ox + (e.clientX - panState.cx);
-    view.offsetY = panState.oy + (e.clientY - panState.cy);
-    draw();
-  } else if (dragState) {
-    handleLeftMove(e);
-  }
+  if (dragState) handleLeftMove(e);
 });
 
 window.addEventListener("mouseup", (e) => {
-  if (e.button === 2) panState = null;
-  else if (e.button === 0) handleLeftUp(e);
+  if (e.button === 0) handleLeftUp(e);
 });
 
 function handleLeftDown(e) {
   if (activeIndex === null) return;
   const [ix, iy] = toImage(e.clientX, e.clientY);
   const s = surfaces[activeIndex];
-  const hitRadiusImg = HIT_RADIUS_PX / view.scale;
 
   let nearest = null;
   let nearestDist = Infinity;
   s.points.forEach((p, idx) => {
     const d = Math.hypot(p[0] - ix, p[1] - iy);
-    if (d <= hitRadiusImg && d < nearestDist) {
+    if (d <= HIT_RADIUS_PX && d < nearestDist) {
       nearest = idx;
       nearestDist = d;
     }
