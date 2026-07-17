@@ -26,12 +26,12 @@ body {
 
 #main {
   display: flex;
-  gap: 20px;
-  align-items: flex-start;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 900px;
 }
 
 #canvas {
-  max-width: 900px;
   width: 100%;
   height: auto;
   border: 1px solid #999;
@@ -39,7 +39,7 @@ body {
 }
 
 #surface-panel {
-  min-width: 260px;
+  width: 100%;
 }
 
 #surface-list {
@@ -75,13 +75,4 @@ body {
 
 .degree-input {
   width: 48px;
-}
-
-#raw-img {
-  max-width: 900px;
-  width: 100%;
-  height: auto;
-  display: block;
-  margin-top: 8px;
-  border: 1px solid #999;
 }

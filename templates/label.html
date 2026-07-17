@@ -25,9 +25,6 @@
     </div>
   </div>
 
-  <h3>Raw image</h3>
-  <img id="raw-img" src="{{ url_for('serve_image', image_id=image_id) }}">
-
   <script>
     window.LABEL_CONFIG = {
       imageId: {{ image_id | tojson }},

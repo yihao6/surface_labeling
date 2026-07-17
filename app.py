@@ -1,3 +1,4 @@
+import argparse
 from pathlib import Path
 
 import numpy as np
@@ -130,4 +131,7 @@ def save(image_id):
 
 
 if __name__ == "__main__":
-    app.run(debug=True, port=5050)
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--port", type=int, default=5050)
+    args = parser.parse_args()
+    app.run(debug=True, port=args.port)
