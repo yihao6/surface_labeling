@@ -10,11 +10,25 @@ PALETTE = [
 ]
 
 
+SOURCE_EXTENSIONS = (".jpg", ".jpeg", ".bmp", ".tif", ".tiff", ".gif", ".webp")
+
+
 def natural_sort_key(name):
     return [int(t) if t.isdigit() else t.lower() for t in re.split(r"(\d+)", name)]
 
 
+def ensure_png_images(images_dir: Path):
+    """Convert any non-PNG source images to grayscale PNG, in place, skipping ones already converted."""
+    for src in images_dir.iterdir():
+        if src.suffix.lower() in SOURCE_EXTENSIONS:
+            png_path = src.with_suffix(".png")
+            if not png_path.exists():
+                with Image.open(src) as im:
+                    im.convert("L").save(png_path)
+
+
 def list_image_ids(images_dir: Path):
+    ensure_png_images(images_dir)
     return sorted((p.stem for p in images_dir.glob("*.png")), key=natural_sort_key)
 
 
