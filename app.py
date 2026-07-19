@@ -80,23 +80,6 @@ def get_control_points(image_id):
     return jsonify(io_utils.load_control_points(CONFIG["root"], image_id))
 
 
-@app.route("/api/preview/<image_id>", methods=["POST"])
-def preview(image_id):
-    resp = require_config()
-    if resp:
-        return resp
-
-    width, _ = io_utils.get_image_size(io_utils.image_path(CONFIG["root"], image_id))
-    body = request.get_json()
-
-    curves = []
-    for surface in body["surfaces"]:
-        y = spline_utils.fit_and_eval(surface["points"], surface["degree"], width)
-        curves.append(y.tolist() if y is not None else None)
-
-    return jsonify({"curves": curves})
-
-
 @app.route("/api/save/<image_id>", methods=["POST"])
 def save(image_id):
     resp = require_config()

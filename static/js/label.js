@@ -52,7 +52,7 @@ function renderList() {
         s.confirmed = false;
         renderList();
       }
-      requestPreview();
+      updatePreview();
       saveState();
     };
     li.appendChild(degInput);
@@ -82,7 +82,7 @@ function addSurface() {
   surfaces.push({ confirmed: false, degree: 3, points: [] });
   activeIndex = surfaces.length - 1;
   renderList();
-  requestPreview();
+  updatePreview();
   saveState();
 }
 
@@ -93,7 +93,7 @@ function moveSurface(i, dir) {
   if (activeIndex === i) activeIndex = j;
   else if (activeIndex === j) activeIndex = i;
   renderList();
-  requestPreview();
+  updatePreview();
   saveState();
 }
 
@@ -102,7 +102,7 @@ function removeSurface(i) {
   if (activeIndex === i) activeIndex = null;
   else if (activeIndex !== null && activeIndex > i) activeIndex -= 1;
   renderList();
-  requestPreview();
+  updatePreview();
   saveState();
 }
 
@@ -134,16 +134,8 @@ function saveState() {
   });
 }
 
-async function requestPreview() {
-  const resp = await fetch(`/api/preview/${IMAGE_ID}`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      surfaces: surfaces.map((s) => ({ points: s.points, degree: s.degree })),
-    }),
-  });
-  const data = await resp.json();
-  previewCurves = data.curves;
+function updatePreview() {
+  previewCurves = surfaces.map((s) => fitAndEvalClient(s.points, s.degree, WIDTH));
   draw();
 }
 
@@ -224,7 +216,7 @@ function handleLeftMove(e) {
   if (dragState.index !== null && dragState.moved) {
     const [ix, iy] = toImage(e.clientX, e.clientY);
     surfaces[activeIndex].points[dragState.index] = [ix, iy];
-    draw();
+    updatePreview();
   }
 }
 
@@ -246,7 +238,7 @@ function handleLeftUp(e) {
   }
 
   dragState = null;
-  requestPreview();
+  updatePreview();
   saveState();
 }
 
@@ -256,7 +248,7 @@ async function init() {
   const data = await resp.json();
   surfaces = data.surfaces || [];
   renderList();
-  requestPreview();
+  updatePreview();
 
   document.getElementById("add-surface-btn").onclick = addSurface;
   document.getElementById("prev-btn").onclick = () => goTo(cfg.idx - 1);
