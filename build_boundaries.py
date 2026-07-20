@@ -1,4 +1,4 @@
-"""Produce boundaries/<id>.npy from confirmed control_points/<id>.json files.
+"""Produce boundaries/<id>.npy from control_points/<id>.json files.
 
 Run this once labeling is done (or periodically) to bake the dense
 per-column boundary arrays consumed by the training pipeline. See
@@ -25,18 +25,24 @@ def build(root: Path):
 
     written, skipped = 0, 0
     for image_id in image_ids:
-        if not io_utils.is_fully_confirmed(root, image_id):
+        surfaces = io_utils.load_control_points(root, image_id)["surfaces"]
+        if not surfaces:
             skipped += 1
             continue
 
-        surfaces = io_utils.load_control_points(root, image_id)["surfaces"]
         width, _ = io_utils.get_image_size(io_utils.image_path(root, image_id))
         rows = [spline_utils.fit_and_eval(s["points"], s["degree"], width) for s in surfaces]
+
+        if any(row is None for row in rows):
+            print(f"{image_id}: skipped, a surface has too few distinct points for its degree")
+            skipped += 1
+            continue
+
         arr = np.stack(rows).astype(np.float32)
         np.save(io_utils.boundaries_path(root, image_id), arr)
         written += 1
 
-    print(f"wrote {written} boundaries, skipped {skipped} unconfirmed/unlabeled images")
+    print(f"wrote {written} boundaries, skipped {skipped} unlabeled/incomplete images")
 
 
 if __name__ == "__main__":

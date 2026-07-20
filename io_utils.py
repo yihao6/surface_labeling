@@ -67,14 +67,8 @@ def save_control_points(root: Path, image_id: str, data: dict):
         json.dump(data, f)
 
 
-def is_fully_confirmed(root: Path, image_id: str) -> bool:
-    data = load_control_points(root, image_id)
-    surfaces = data["surfaces"]
-    return bool(surfaces) and all(s["confirmed"] for s in surfaces)
-
-
 def resume_index(root: Path, image_ids: list) -> int:
     for i, image_id in enumerate(image_ids):
-        if not is_fully_confirmed(root, image_id):
+        if not control_points_path(root, image_id).exists():
             return i
     return 0

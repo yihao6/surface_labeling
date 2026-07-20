@@ -88,12 +88,6 @@ def save(image_id):
     body = request.get_json()
     surfaces = body["surfaces"]
 
-    for surface in surfaces:
-        if surface["confirmed"]:
-            distinct_x = {round(p[0], 6) for p in surface["points"]}
-            if len(distinct_x) < surface["degree"] + 1:
-                return jsonify({"error": "surface confirmed with too few distinct points"}), 400
-
     io_utils.save_control_points(root, image_id, {"surfaces": surfaces})
 
     return jsonify({"ok": True})

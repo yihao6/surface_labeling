@@ -59,10 +59,6 @@ body {
   outline: 2px solid #222;
 }
 
-.surface-row.confirmed .color-btn {
-  opacity: 0.6;
-}
-
 .color-btn {
   color: #fff;
   border: none;

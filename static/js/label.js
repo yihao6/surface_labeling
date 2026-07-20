@@ -20,23 +20,17 @@ let surfaces = [];
 let activeIndex = null;
 let previewCurves = null;
 
-function hasEnoughPoints(s) {
-  const xs = new Set(s.points.map((p) => p[0].toFixed(6)));
-  return xs.size >= s.degree + 1;
-}
-
 function renderList() {
   const ul = document.getElementById("surface-list");
   ul.innerHTML = "";
   surfaces.forEach((s, i) => {
     const li = document.createElement("li");
-    li.className =
-      "surface-row" + (i === activeIndex ? " active" : "") + (s.confirmed ? " confirmed" : "");
+    li.className = "surface-row" + (i === activeIndex ? " active" : "");
 
     const colorBtn = document.createElement("button");
     colorBtn.className = "color-btn";
     colorBtn.style.background = PALETTE[i % PALETTE.length];
-    colorBtn.textContent = `Surface ${i + 1}` + (s.confirmed ? " ✓" : "");
+    colorBtn.textContent = `Surface ${i + 1}`;
     colorBtn.onclick = () => onSurfaceButtonClick(i);
     li.appendChild(colorBtn);
 
@@ -48,10 +42,6 @@ function renderList() {
     degInput.className = "degree-input";
     degInput.oninput = () => {
       s.degree = Math.max(1, parseInt(degInput.value, 10) || 1);
-      if (s.confirmed && !hasEnoughPoints(s)) {
-        s.confirmed = false;
-        renderList();
-      }
       updatePreview();
       saveState();
     };
@@ -79,7 +69,7 @@ function renderList() {
 }
 
 function addSurface() {
-  surfaces.push({ confirmed: false, degree: 3, points: [] });
+  surfaces.push({ degree: 3, points: [] });
   activeIndex = surfaces.length - 1;
   renderList();
   updatePreview();
@@ -107,22 +97,8 @@ function removeSurface(i) {
 }
 
 function onSurfaceButtonClick(i) {
-  const s = surfaces[i];
-  if (activeIndex === i) {
-    if (!hasEnoughPoints(s)) {
-      alert(`Need at least ${s.degree + 1} points to confirm this surface.`);
-      return;
-    }
-    s.confirmed = true;
-    activeIndex = null;
-  } else if (s.confirmed) {
-    s.confirmed = false;
-    activeIndex = i;
-  } else {
-    activeIndex = i;
-  }
+  activeIndex = activeIndex === i ? null : i;
   renderList();
-  saveState();
   draw();
 }
 
