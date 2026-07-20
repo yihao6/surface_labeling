@@ -1,11 +1,9 @@
 import argparse
 from pathlib import Path
 
-import numpy as np
 from flask import Flask, jsonify, redirect, render_template, request, send_from_directory, url_for
 
 import io_utils
-import spline_utils
 from state import CONFIG
 
 app = Flask(__name__)
@@ -98,19 +96,7 @@ def save(image_id):
 
     io_utils.save_control_points(root, image_id, {"surfaces": surfaces})
 
-    b_path = io_utils.boundaries_path(root, image_id)
-    if surfaces and all(s["confirmed"] for s in surfaces):
-        width, _ = io_utils.get_image_size(io_utils.image_path(root, image_id))
-        rows = [spline_utils.fit_and_eval(s["points"], s["degree"], width) for s in surfaces]
-        arr = np.stack(rows).astype(np.float32)
-        np.save(b_path, arr)
-        written = True
-    else:
-        if b_path.exists():
-            b_path.unlink()
-        written = False
-
-    return jsonify({"boundaries_written": written})
+    return jsonify({"ok": True})
 
 
 if __name__ == "__main__":
